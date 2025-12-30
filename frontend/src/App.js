@@ -75,8 +75,10 @@ function App() {
   return (
     <div className="App">
       <header className="app-header">
-        <h1>Time Wardrobe AI</h1>
-        <p>Transform your look through different eras!</p>
+        <div className="brand-container">
+          <h1 className="logo-text">Time <span className="highlight">Wardrobe</span></h1>
+          <p className="tagline">Transform your look through different eras</p>
+        </div>
       </header>
 
       <main className="main-content">
@@ -100,7 +102,6 @@ function App() {
             </button>
             {previewImage && (
               <div className="image-preview">
-                <h3>Original Image:</h3>
                 <img src={previewImage} alt="Preview" />
               </div>
             )}
