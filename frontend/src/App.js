@@ -1,32 +1,41 @@
-import React, { useState, useRef } from 'react';
-import './App.css'; // Make sure to import the CSS file
+import React, { useState, useRef, useEffect } from 'react';
+import './App.css';
 
 function App() {
   const [selectedImage, setSelectedImage] = useState(null);
-  const [previewImage, setPreviewImage] = useState(null);
   const [eraPrompt, setEraPrompt] = useState('');
   const [resultImage, setResultImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   const fileInputRef = useRef(null);
 
-  // --- IMPORTANT: Configure your backend URL here ---
-  const BACKEND_URL = 'http://localhost:8000'; // For local development
-  // const BACKEND_URL = 'https://your-huggingface-space-name.hf.space'; // For deployment
-  // --------------------------------------------------
+  // Update backend URL as needed (use your Local IP for mobile testing)
+  // const BACKEND_URL = 'http://localhost:8000'; 
+  const BACKEND_URL = 'http://192.168.254.15:8000'; // For local development
+  // Track screen size for adaptive buttons
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleImageChange = (event) => {
     const file = event.target.files[0];
     if (file) {
       setSelectedImage(file);
-      setPreviewImage(URL.createObjectURL(file));
       setResultImage(null);
       setError(null);
     }
   };
 
-  const handleCaptureClick = () => {
+  const handleInputTrigger = (mode) => {
+    if (mode === 'camera') {
+      fileInputRef.current.setAttribute('capture', 'user');
+    } else {
+      fileInputRef.current.removeAttribute('capture');
+    }
     fileInputRef.current.click();
   };
 
@@ -51,22 +60,13 @@ function App() {
       });
 
       if (!response.ok) {
-        let errorMessage = `HTTP error! status: ${response.status}`;
-        try {
-          const errorData = await response.json();
-          if (errorData && errorData.detail) {
-            errorMessage = errorData.detail;
-          }
-        } catch (jsonError) {}
-        throw new Error(errorMessage);
+        throw new Error(`Server error: ${response.status}`);
       }
 
       const imageBlob = await response.blob();
       setResultImage(URL.createObjectURL(imageBlob));
-
     } catch (e) {
-      console.error("Error processing image:", e);
-      setError(`Failed to process image: ${e.message}. Please try again.`);
+      setError(`Failed to process: ${e.message}`);
     } finally {
       setLoading(false);
     }
@@ -83,85 +83,94 @@ function App() {
 
       <main className="main-content">
         <div className="input-panel card">
-          <h2 className="panel-title">Your Photo & Prompt</h2>
+          <h2 className="panel-title">Step 1: Setup</h2>
+          
           <div className="image-input-area">
             <input
               type="file"
               accept="image/*"
-              capture="camera"
               onChange={handleImageChange}
               style={{ display: 'none' }}
               ref={fileInputRef}
             />
-            <button 
-              onClick={handleCaptureClick} 
-              className="action-button primary"
-              disabled={loading}
-            >
-              <i className="fas fa-camera"></i> Capture or Upload Image
-            </button>
-            {previewImage && (
-              <div className="image-preview">
-                <img src={previewImage} alt="Preview" />
+            
+            {isMobile ? (
+              <div className="mobile-button-group">
+                <button 
+                  onClick={() => handleInputTrigger('camera')} 
+                  className={`action-button primary flex-1 ${selectedImage ? 'success' : ''}`}
+                  disabled={loading}
+                >
+                  <i className="fas fa-camera"></i> Camera
+                </button>
+                <button 
+                  onClick={() => handleInputTrigger('upload')} 
+                  className={`action-button outline flex-1 ${selectedImage ? 'success-outline' : ''}`}
+                  disabled={loading}
+                >
+                  <i className="fas fa-image"></i> Gallery
+                </button>
               </div>
+            ) : (
+              <button 
+                onClick={() => handleInputTrigger('upload')} 
+                className={`action-button primary ${selectedImage ? 'success' : ''}`}
+                disabled={loading}
+              >
+                <i className={`fas ${selectedImage ? 'fa-check-circle' : 'fa-upload'}`}></i>
+                {selectedImage ? ' Photo Ready' : ' Upload Photo'}
+              </button>
             )}
           </div>
 
           <div className="prompt-input-area">
-            <label htmlFor="eraPrompt" className="input-label">Describe the era's clothing:</label>
+            <label htmlFor="eraPrompt" className="panel-title input-label">Step 2: Describe the Era</label>
             <textarea
               id="eraPrompt"
               value={eraPrompt}
               onChange={(e) => setEraPrompt(e.target.value)}
-              placeholder="e.g., a prehistoric human wearing animal skin clothing, a futuristic cybernetic suit, a roaring 20s flapper dress"
-              rows="4"
+              placeholder="e.g., a prehistoric human wearing animal skin clothing..."
               disabled={loading}
             ></textarea>
+            
             <button 
               onClick={handleSubmit} 
               className="action-button secondary"
               disabled={loading || !selectedImage || !eraPrompt.trim()}
             >
               {loading ? (
-                <>
-                  <i className="fas fa-spinner fa-spin"></i> Processing...
-                </>
+                <><i className="fas fa-spinner fa-spin"></i> Processing...</>
               ) : (
-                <>
-                  <i className="fas fa-magic"></i> Change Clothes
-                </>
+                <><i className="fas fa-magic"></i> Change Clothes</>
               )}
             </button>
           </div>
 
           {error && <p className="message error-message">{error}</p>}
-          {loading && <p className="message loading-message">Generating your new outfit... This might take a moment.</p>}
         </div>
 
         <div className="output-panel card">
-          <h2 className="panel-title">Transformed Look</h2>
-          {resultImage ? (
-            <>
-              <div className="result-image-container">
-                <img src={resultImage} alt="Transformed" />
-              </div>
-              <div className="download-area">
-                <a href={resultImage} download="time_wardrobe_output.png" className="action-button download-button">
-                  <i className="fas fa-download"></i> Download Result
+          <h2 className="panel-title">Step 3: Results</h2>
+          <div className="result-container">
+            {resultImage ? (
+              <div className="result-image-wrapper">
+                <img src={resultImage} alt="Transformed" className="contained-image" />
+                <a href={resultImage} download="time_wardrobe.png" className="action-button download-button">
+                  <i className="fas fa-download"></i> Download
                 </a>
               </div>
-            </>
-          ) : (
-            <div className="placeholder-text">
-              <p>Upload your image and describe the era to see your transformation here!</p>
-              <i className="fas fa-image fa-5x placeholder-icon"></i>
-            </div>
-          )}
+            ) : (
+              <div className="placeholder-text">
+                <i className="fas fa-wand-sparkles fa-3x"></i>
+                <p>Transformation will appear here</p>
+              </div>
+            )}
+          </div>
         </div>
       </main>
 
       <footer className="app-footer">
-        <p>&copy; {new Date().getFullYear()} Time Wardrobe AI. All rights reserved.</p>
+        <p>&copy; {new Date().getFullYear()} Time Wardrobe AI.</p>
       </footer>
     </div>
   );

@@ -1,14 +1,11 @@
-/* Import Modern Google Font */
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
-/* --- Global Reset & Base --- */
 body {
   margin: 0;
   padding: 0;
   font-family: 'Plus Jakarta Sans', sans-serif;
-  background: #0f172a; /* Deep Navy Night */
+  background: #0f172a;
   color: #f1f5f9;
-  line-height: 1.6;
   min-height: 100vh;
 }
 
@@ -16,35 +13,26 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  width: 100%; /* Full screen width */
+  width: 100%;
 }
 
-/* --- Full Width Header --- */
+/* --- Header --- */
 .app-header {
   width: 100%;
   box-sizing: border-box;
-  padding: 25px 50px;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
+  padding: 20px 40px;
   background: rgba(15, 23, 42, 0.95);
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   position: sticky;
   top: 0;
   z-index: 100;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.brand-container {
-  text-align: left;
 }
 
 .logo-text {
   margin: 0;
   font-size: 1.6rem;
   font-weight: 800;
-  letter-spacing: -0.5px;
-  color: #fff;
   text-transform: lowercase;
 }
 
@@ -55,23 +43,20 @@ body {
 }
 
 .tagline {
-  margin: 4px 0 0 0;
-  font-size: 0.85rem;
-  font-weight: 400;
+  margin: 2px 0 0 0;
+  font-size: 0.8rem;
   color: #94a3b8;
-  letter-spacing: 0.2px;
 }
 
 /* --- Main Layout --- */
 .main-content {
-  flex-grow: 1;
+  flex: 1;
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  padding: 60px 20px;
-  gap: 40px;
-  max-width: 1200px; /* Constrain only the cards area */
-  margin: 0 auto; /* Center the cards area */
+  flex-direction: column;
+  padding: 30px 20px;
+  gap: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
 }
@@ -79,88 +64,116 @@ body {
 .card {
   background: #1e293b;
   border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
-  padding: 35px;
-  flex: 1;
-  min-width: 340px;
-  max-width: 500px;
+  padding: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
   display: flex;
   flex-direction: column;
 }
 
 .panel-title {
-  color: #f8fafc;
-  font-size: 1.4rem;
+  font-size: 1.2rem;
   font-weight: 700;
-  margin: 0 0 25px 0;
+  margin-bottom: 20px;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
-/* --- Input Area & Textarea Fixes --- */
+.input-label {
+  margin-top: 20px;
+  margin-bottom: 0px;
+}
+
+/* --- Form Fields --- */
 .image-input-area, .prompt-input-area {
-  width: 100%;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
   gap: 15px;
+  width: 100%;
 }
 
-.prompt-input-area {
-  margin-top: 25px;
+.mobile-button-group {
+  display: flex;
+  gap: 10px;
+  width: 100%;
 }
+
+.flex-1 { flex: 1; }
 
 textarea {
   width: 100%;
   box-sizing: border-box;
   background: #0f172a;
   border: 1px solid #334155;
-  color: #f1f5f9;
+  color: white;
   border-radius: 12px;
   padding: 15px;
   font-family: inherit;
   font-size: 0.95rem;
   resize: none;
-  min-height: 110px;
+  min-height: 100px;
 }
 
-textarea:focus {
-  outline: none;
-  border-color: #38bdf8;
-  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.1);
+/* --- Image Boundary Fix --- */
+.result-container {
+  width: 100%;
+  height: 400px; /* Fixed height for consistency */
+  background: #0f172a;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  border: 1px solid #334155;
 }
 
-/* --- Refined Sleek Buttons --- */
+.result-image-wrapper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.contained-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* Keeps image inside borders without cropping */
+  display: block;
+}
+
+/* --- Buttons --- */
 .action-button {
-  font-family: inherit;
+  padding: 12px 20px;
   border-radius: 10px;
   font-weight: 600;
+  border: none;
+  cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  padding: 12px 24px;
   font-size: 0.9rem;
-  cursor: pointer;
   transition: all 0.2s ease;
-  border: none;
 }
 
-.primary {
-  background: #38bdf8;
-  color: #0f172a;
-}
+.primary { background: #38bdf8; color: #0f172a; }
+.secondary { background: #6366f1; color: white; width: 100%; margin-top: 10px; }
+.outline { background: transparent; border: 2px solid #38bdf8; color: #38bdf8; }
 
-.secondary {
-  background: #6366f1;
-  color: white;
-  width: 100%; 
-}
+.success { background: #10b981; color: white; }
+.success-outline { border-color: #10b981; color: #10b981; }
 
 .download-button {
-  background: #10b981;
+  position: absolute;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(16, 185, 129, 0.9);
   color: white;
+  padding: 8px 20px;
   text-decoration: none;
-  margin-top: 20px;
+  font-size: 0.8rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 
 .action-button:disabled {
@@ -169,39 +182,25 @@ textarea:focus {
   cursor: not-allowed;
 }
 
-/* --- Previews & Results --- */
-.image-preview, .result-image-container {
-  width: 100%;
-  border-radius: 15px;
-  background: #0f172a;
-  border: 1px dashed #334155;
-  padding: 10px;
-  box-sizing: border-box;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.image-preview img, .result-image-container img {
-  max-width: 100%;
-  border-radius: 10px;
-}
-
-/* --- Full Width Footer --- */
+/* --- Footer --- */
 .app-footer {
   width: 100%;
   box-sizing: border-box;
-  padding: 40px 50px;
+  padding: 30px 40px;
   text-align: left;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: #64748b;
-  background: #0f172a;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
-  margin-top: auto; /* Pushes to bottom */
+  background: #0f172a;
 }
 
-/* --- Responsive --- */
-@media (max-width: 768px) {
-  .app-header, .app-footer { padding: 20px; }
-  .main-content { padding: 30px 15px; }
+/* --- Desktop Logic --- */
+@media (min-width: 768px) {
+  .main-content {
+    flex-direction: row;
+    align-items: flex-start;
+    padding: 60px 40px;
+  }
+  .card { flex: 1; }
+  .result-container { height: 500px; }
 }
