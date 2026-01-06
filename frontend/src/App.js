@@ -1,177 +1,154 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './App.css';
 
+const ERA_PRESETS = [
+  { label: "Select an Era...", prompt: "" },
+  { label: "Stone Age (Caveman)", prompt: "prehistoric human wearing primitive animal skin clothing, stone age style, fur garments" },
+  { label: "Ancient Roman", prompt: "an ancient Roman citizen wearing a white wool toga with gold embroidery" },
+  { label: "Medieval Knight", prompt: "a knight in shining silver plate armor, medieval historical clothing" },
+  { label: "Victorian Era", prompt: "19th century Victorian formal attire, high collar, intricate waistcoat" },
+  { label: "1920s Gatsby", prompt: "1920s fashion, sharp pinstripe suit, Gatsby style with a fedora" },
+  { label: "Cyberpunk Future", prompt: "futuristic cyberpunk outfit, neon glowing tech-wear, high-tech fabrics" },
+  { label: "Victorian Gentleman", prompt: "Victorian era gentleman in formal coat and waistcoat" },
+  { label: "Victorian Lady", prompt: "Victorian era lady in long dress with lace details" },
+  { label: "Indian King", prompt: "Ancient Indian king in silk dhoti and royal ornaments" },
+  { label: "Mughal Noblewoman", prompt: "Mughal noblewoman in traditional anarkali dress" },
+];
+
 function App() {
+  const [mode, setMode] = useState('normal'); 
   const [selectedImage, setSelectedImage] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
   const [eraPrompt, setEraPrompt] = useState('');
   const [resultImage, setResultImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [lastTs, setLastTs] = useState(0);
 
   const fileInputRef = useRef(null);
+  const BACKEND_URL = 'http://localhost:8000'; // Replace 'localhost' with your IP for phone testing
 
-  // Update backend URL as needed (use your Local IP for mobile testing)
-  // const BACKEND_URL = 'http://localhost:8000'; 
-  const BACKEND_URL = 'http://192.168.254.15:8000'; // For local development
-  // Track screen size for adaptive buttons
+  // Detect Mode from URL Query Param (?view=display or ?view=controller)
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    const params = new URLSearchParams(window.location.search);
+    const view = params.get('view');
+    if (view === 'display') setMode('display');
+    else if (view === 'controller') setMode('controller');
+    else setMode('normal');
   }, []);
 
-  const handleImageChange = (event) => {
-    const file = event.target.files[0];
+  // Stall Display Polling Logic
+  useEffect(() => {
+    if (mode !== 'display') return;
+    const interval = setInterval(async () => {
+      try {
+        const statusRes = await fetch(`${BACKEND_URL}/stall/status`);
+        const status = await statusRes.json();
+        if (status.ts > lastTs) {
+          const imgRes = await fetch(`${BACKEND_URL}/stall/latest`);
+          if (imgRes.ok) {
+            const blob = await imgRes.blob();
+            setResultImage(URL.createObjectURL(blob));
+            setLastTs(status.ts);
+          }
+        }
+      } catch (e) { console.log("Waiting for new image..."); }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [mode, lastTs]);
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
     if (file) {
       setSelectedImage(file);
+      setPreviewUrl(URL.createObjectURL(file));
       setResultImage(null);
-      setError(null);
     }
   };
 
-  const handleInputTrigger = (mode) => {
-    if (mode === 'camera') {
-      fileInputRef.current.setAttribute('capture', 'user');
-    } else {
-      fileInputRef.current.removeAttribute('capture');
-    }
+  const handleTrigger = (type) => {
+    if (type === 'camera') fileInputRef.current.setAttribute('capture', 'user');
+    else fileInputRef.current.removeAttribute('capture');
     fileInputRef.current.click();
   };
 
   const handleSubmit = async () => {
-    if (!selectedImage || !eraPrompt.trim()) {
-      setError("Please select an image and enter an era prompt.");
-      return;
-    }
-
+    if (!selectedImage || !eraPrompt) return setError("Please select image and era.");
     setLoading(true);
-    setResultImage(null);
     setError(null);
-
+    
     const formData = new FormData();
     formData.append('file', selectedImage);
     formData.append('era_prompt', eraPrompt);
+    formData.append('is_stall', mode === 'controller' ? 'true' : 'false');
 
     try {
-      const response = await fetch(`${BACKEND_URL}/time_wardrobe/`, {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error(`Server error: ${response.status}`);
-      }
-
-      const imageBlob = await response.blob();
-      setResultImage(URL.createObjectURL(imageBlob));
-    } catch (e) {
-      setError(`Failed to process: ${e.message}`);
-    } finally {
-      setLoading(false);
-    }
+      const res = await fetch(`${BACKEND_URL}/time_wardrobe/`, { method: 'POST', body: formData });
+      if (!res.ok) throw new Error("Processing failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      
+      // If Controller, we might not need to show the image locally, but let's show it anyway for confirmation
+      setResultImage(url);
+      if (mode === 'controller') alert("Transformation sent to main display!");
+    } catch (e) { setError(e.message); }
+    finally { setLoading(false); }
   };
 
   return (
-    <div className="App">
+    <div className={`App view-${mode}`}>
       <header className="app-header">
-        <div className="brand-container">
-          <h1 className="logo-text">Time <span className="highlight">Wardrobe</span></h1>
-          <p className="tagline">Transform your look through different eras</p>
-        </div>
+        <h1 className="logo-text">Time <span className="highlight">Wardrobe</span></h1>
+        {mode === 'display' && <span className="live-badge">LIVE DISPLAY</span>}
       </header>
 
       <main className="main-content">
-        <div className="input-panel card">
-          <h2 className="panel-title">Step 1: Setup</h2>
-          
-          <div className="image-input-area">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              style={{ display: 'none' }}
-              ref={fileInputRef}
-            />
+        {/* INPUT SECTION - Hidden on Display */}
+        {mode !== 'display' && (
+          <div className="input-panel card">
+            <h2 className="panel-title">1. Setup</h2>
+            <div className="button-row">
+              <button onClick={() => handleTrigger('camera')} className="action-button primary"><i className="fas fa-camera" /> Camera</button>
+              <button onClick={() => handleTrigger('gallery')} className="action-button outline"><i className="fas fa-image" /> Gallery</button>
+            </div>
+            <input type="file" ref={fileInputRef} onChange={handleImageChange} style={{display:'none'}} accept="image/*" />
             
-            {isMobile ? (
-              <div className="mobile-button-group">
-                <button 
-                  onClick={() => handleInputTrigger('camera')} 
-                  className={`action-button primary flex-1 ${selectedImage ? 'success' : ''}`}
-                  disabled={loading}
-                >
-                  <i className="fas fa-camera"></i> Camera
-                </button>
-                <button 
-                  onClick={() => handleInputTrigger('upload')} 
-                  className={`action-button outline flex-1 ${selectedImage ? 'success-outline' : ''}`}
-                  disabled={loading}
-                >
-                  <i className="fas fa-image"></i> Gallery
-                </button>
+            {previewUrl && (
+              <div className="preview-container">
+                <img src={previewUrl} className="preview-box" alt="preview" />
+                <button className="remove-btn" onClick={() => {setSelectedImage(null); setPreviewUrl(null)}}>×</button>
               </div>
-            ) : (
-              <button 
-                onClick={() => handleInputTrigger('upload')} 
-                className={`action-button primary ${selectedImage ? 'success' : ''}`}
-                disabled={loading}
-              >
-                <i className={`fas ${selectedImage ? 'fa-check-circle' : 'fa-upload'}`}></i>
-                {selectedImage ? ' Photo Ready' : ' Upload Photo'}
-              </button>
             )}
-          </div>
 
-          <div className="prompt-input-area">
-            <label htmlFor="eraPrompt" className="panel-title input-label">Step 2: Describe the Era</label>
-            <textarea
-              id="eraPrompt"
-              value={eraPrompt}
-              onChange={(e) => setEraPrompt(e.target.value)}
-              placeholder="e.g., a prehistoric human wearing animal skin clothing..."
-              disabled={loading}
-            ></textarea>
-            
-            <button 
-              onClick={handleSubmit} 
-              className="action-button secondary"
-              disabled={loading || !selectedImage || !eraPrompt.trim()}
-            >
-              {loading ? (
-                <><i className="fas fa-spinner fa-spin"></i> Processing...</>
-              ) : (
-                <><i className="fas fa-magic"></i> Change Clothes</>
-              )}
+            <h2 className="panel-title" style={{marginTop:'20px'}}>2. Era Description</h2>
+            <select className="era-select" onChange={(e) => setEraPrompt(e.target.value)} disabled={loading}>
+              {ERA_PRESETS.map(era => <option key={era.label} value={era.prompt}>{era.label}</option>)}
+            </select>
+
+            <button onClick={handleSubmit} className="action-button secondary" disabled={loading || !selectedImage || !eraPrompt}>
+              {loading ? <i className="fas fa-spinner fa-spin" /> : "Transform Look"}
             </button>
+            {error && <p className="error-text">{error}</p>}
           </div>
+        )}
 
-          {error && <p className="message error-message">{error}</p>}
-        </div>
-
-        <div className="output-panel card">
-          <h2 className="panel-title">Step 3: Results</h2>
-          <div className="result-container">
-            {resultImage ? (
-              <div className="result-image-wrapper">
-                <img src={resultImage} alt="Transformed" className="contained-image" />
-                <a href={resultImage} download="time_wardrobe.png" className="action-button download-button">
-                  <i className="fas fa-download"></i> Download
-                </a>
-              </div>
-            ) : (
-              <div className="placeholder-text">
-                <i className="fas fa-wand-sparkles fa-3x"></i>
-                <p>Transformation will appear here</p>
-              </div>
-            )}
+        {/* OUTPUT SECTION - Hidden on Controller */}
+        {mode !== 'controller' && (
+          <div className={`output-panel card ${mode === 'display' ? 'full-screen' : ''}`}>
+            <h2 className="panel-title">3. Result</h2>
+            <div className="result-container">
+              {resultImage ? (
+                <img src={resultImage} className="final-img" alt="result" />
+              ) : (
+                <div className="placeholder">
+                  <i className="fas fa-wand-sparkles fa-3x" />
+                  <p>{mode === 'display' ? "Ready for Input..." : "Result will appear here"}</p>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </main>
-
-      <footer className="app-footer">
-        <p>&copy; {new Date().getFullYear()} Time Wardrobe AI.</p>
-      </footer>
     </div>
   );
 }
