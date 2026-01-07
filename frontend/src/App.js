@@ -6,13 +6,15 @@ const ERA_PRESETS = [
   { label: "Stone Age (Caveman)", prompt: "prehistoric human wearing primitive animal skin clothing, stone age style, fur garments" },
   { label: "Ancient Roman", prompt: "an ancient Roman citizen wearing a white wool toga with gold embroidery" },
   { label: "Medieval Knight", prompt: "a knight in shining silver plate armor, medieval historical clothing" },
-  { label: "Victorian Era", prompt: "19th century Victorian formal attire, high collar, intricate waistcoat" },
-  { label: "1920s Gatsby", prompt: "1920s fashion, sharp pinstripe suit, Gatsby style with a fedora" },
-  { label: "Cyberpunk Future", prompt: "futuristic cyberpunk outfit, neon glowing tech-wear, high-tech fabrics" },
+  { label: "1920s", prompt: "1920s fashion, sharp pinstripe suit, Gatsby style with a fedora" },
+  { label: "1970s", prompt: "A person in 1970s fashion, retro colors, flim grain" },
+  { label: "1970s Rockstar", prompt: "Vintage leather jacket, elctric guitar, concert stage vibe, retro ligthing" },
   { label: "Victorian Gentleman", prompt: "Victorian era gentleman in formal coat and waistcoat" },
   { label: "Victorian Lady", prompt: "Victorian era lady in long dress with lace details" },
   { label: "Indian King", prompt: "Ancient Indian king in silk dhoti and royal ornaments" },
   { label: "Mughal Noblewoman", prompt: "Mughal noblewoman in traditional anarkali dress" },
+  { label: "World War 2", prompt: "Mughal noblewoman in traditional anarkali dress" },
+  { label: "Bridal Dress", prompt: "White gown, flower bouquet, elegant lighting" },
 ];
 
 function App() {
