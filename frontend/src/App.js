@@ -26,9 +26,8 @@ function App() {
   const [lastTs, setLastTs] = useState(0);
 
   const fileInputRef = useRef(null);
-  const BACKEND_URL = 'http://localhost:8000'; // Replace 'localhost' with your IP for phone testing
+  const BACKEND_URL = 'http://localhost:8000';
 
-  // Detect Mode from URL Query Param (?view=display or ?view=controller)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const view = params.get('view');
@@ -37,7 +36,6 @@ function App() {
     else setMode('normal');
   }, []);
 
-  // Stall Display Polling Logic
   useEffect(() => {
     if (mode !== 'display') return;
     const interval = setInterval(async () => {
@@ -88,11 +86,34 @@ function App() {
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       
-      // If Controller, we might not need to show the image locally, but let's show it anyway for confirmation
       setResultImage(url);
       if (mode === 'controller') alert("Transformation sent to main display!");
     } catch (e) { setError(e.message); }
     finally { setLoading(false); }
+  };
+
+  const handleDownload = async () => {
+    if (!resultImage) return;
+    
+    try {
+      if (mode === 'display') {
+        const res = await fetch(`${BACKEND_URL}/download/latest`);
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'time_wardrobe_result.png';
+        a.click();
+        URL.revokeObjectURL(url);
+      } else {
+        const a = document.createElement('a');
+        a.href = resultImage;
+        a.download = 'time_wardrobe_result.png';
+        a.click();
+      }
+    } catch (e) {
+      console.error('Download failed:', e);
+    }
   };
 
   return (
@@ -103,7 +124,6 @@ function App() {
       </header>
 
       <main className="main-content">
-        {/* INPUT SECTION - Hidden on Display */}
         {mode !== 'display' && (
           <div className="input-panel card">
             <h2 className="panel-title">1. Setup</h2>
@@ -132,13 +152,17 @@ function App() {
           </div>
         )}
 
-        {/* OUTPUT SECTION - Hidden on Controller */}
         {mode !== 'controller' && (
           <div className={`output-panel card ${mode === 'display' ? 'full-screen' : ''}`}>
             <h2 className="panel-title">3. Result</h2>
             <div className="result-container">
               {resultImage ? (
-                <img src={resultImage} className="final-img" alt="result" />
+                <>
+                  <img src={resultImage} className="final-img" alt="result" />
+                  <button onClick={handleDownload} className="download-btn">
+                    <i className="fas fa-download" /> Download
+                  </button>
+                </>
               ) : (
                 <div className="placeholder">
                   <i className="fas fa-wand-sparkles fa-3x" />

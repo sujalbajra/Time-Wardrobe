@@ -7,8 +7,10 @@ import io
 import numpy as np
 import time
 import cv2
-from transformers import SegformerImageProcessor, SegformerForSemanticSegmentation
+from transformers import SegformerImageProcessor, SegformerForSemanticSegmentation, logging
 from diffusers import StableDiffusionInpaintPipeline
+
+logging.set_verbosity_error()
 
 app = FastAPI()
 
@@ -48,6 +50,7 @@ async def load_models():
         print(f"Loading Error: {e}")
 
 def get_clothing_mask(image: Image.Image):
+    original_size = image.size
     target_dim = 768
     w, h = image.size
     aspect = w / h
@@ -67,40 +70,41 @@ def get_clothing_mask(image: Image.Image):
     pred_seg = logits.argmax(dim=1)[0].numpy()
     
     mask = np.zeros_like(pred_seg, dtype=np.uint8)
-    for cid in [4, 5, 6, 7, 8]: # Clothing classes
+    for cid in [4, 5, 6, 7, 8]:
         mask[pred_seg == cid] = 255
     
     mask = cv2.dilate(mask, np.ones((5, 5), np.uint8), iterations=1)
-    return Image.fromarray(mask), img_res
+    return Image.fromarray(mask), img_res, original_size
 
 @app.post("/time_wardrobe/")
 async def time_wardrobe_api(
     file: UploadFile = File(...),
     era_prompt: str = Form(...),
-    is_stall: str = Form("false") # Received as string from FormData
+    is_stall: str = Form("false")
 ):
     global stall_store
     try:
         content = await file.read()
         raw_img = Image.open(io.BytesIO(content)).convert("RGB")
-        mask, resized_img = get_clothing_mask(raw_img)
+        mask, resized_img, original_size = get_clothing_mask(raw_img)
         
         prompt = f"{era_prompt}, identical face, preserve facial features, high quality"
         
         result = inpaint_pipe(
             prompt=prompt,
-            negative_prompt="modern, deformed face, blurry, naked, bad anatomy",
+            negative_prompt="deformed face, distorted face, face change, different face, blurry face, warped face, modern, naked, bad anatomy, mutation",
             image=resized_img,
             mask_image=mask,
-            guidance_scale=8.5,
-            num_inference_steps=50
+            guidance_scale=12,
+            num_inference_steps=25
         ).images[0]
+        
+        result = result.resize(original_size, Image.LANCZOS)
 
         img_io = io.BytesIO()
         result.save(img_io, format="PNG")
         final_bytes = img_io.getvalue()
         
-        # Only update the global display if the request came from the Controller
         if is_stall.lower() == "true":
             stall_store["bytes"] = final_bytes
             stall_store["timestamp"] = time.time()
@@ -119,5 +123,12 @@ async def get_latest():
         raise HTTPException(status_code=404)
     return StreamingResponse(io.BytesIO(stall_store["bytes"]), media_type="image/png")
 
-
-
+@app.get("/download/latest")
+async def download_latest():
+    if not stall_store["bytes"]:
+        raise HTTPException(status_code=404, detail="No image available")
+    return StreamingResponse(
+        io.BytesIO(stall_store["bytes"]), 
+        media_type="image/png",
+        headers={"Content-Disposition": "attachment; filename=time_wardrobe_result.png"}
+    )
