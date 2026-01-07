@@ -3,9 +3,11 @@ import './App.css';
 
 const ERA_PRESETS = [
   { label: "Select an Era...", prompt: "" },
-  { label: "Stone Age (Caveman)", prompt: "prehistoric human wearing primitive animal skin clothing, stone age style, fur garments" },
-  { label: "Ancient Roman", prompt: "an ancient Roman citizen wearing a white wool toga with gold embroidery" },
-  { label: "Medieval Knight", prompt: "a knight in shining silver plate armor, medieval historical clothing" },
+  { label: "Stone Age (Caveman)", prompt: "prehistoric human wearing primitive animal-skin clothing, rough-cut fur garments, handmade leather straps, natural earth tones, wild unkempt hair, rugged texture, outdoors rocky environment, soft diffused daylight" },  
+  { label: "Ancient Roman", prompt: "ancient Roman citizen wearing a white wool toga with gold embroidery, sandals, short neatly styled hair, marble architecture in background, soft warm sunlight, clean classical aesthetic" },
+  { label: "Ancient Greek", prompt: "ancient Greek philosopher wearing a himation over a chiton, leather sandals, laurel wreath on head, standing in front of white marble columns, bright Mediterranean sunlight, scholarly and serene atmosphere" },
+  { label: "Medieval Peasant", prompt: "medieval European peasant wearing simple wool tunic and trousers, leather belt, rough fabric shoes, unkempt hair, rustic village background with thatched cottages, overcast sky, earthy tones" },
+  { label: "Medieval Knight", prompt: "medieval knight in polished silver plate armor, chainmail underlayer, engraved chestplate, leather belt, raised visor helmet, castle courtyard background, dramatic side lighting, realistic metal reflections" },
   { label: "1920s", prompt: "1920s fashion, sharp pinstripe suit, Gatsby style with a fedora" },
   { label: "1970s", prompt: "A person in 1970s fashion, retro colors, flim grain" },
   { label: "1970s Rockstar", prompt: "Vintage leather jacket, elctric guitar, concert stage vibe, retro ligthing" },
@@ -15,7 +17,14 @@ const ERA_PRESETS = [
   { label: "Mughal Noblewoman", prompt: "Mughal noblewoman in traditional anarkali dress" },
   { label: "World War 2", prompt: "Mughal noblewoman in traditional anarkali dress" },
   { label: "Bridal Dress", prompt: "White gown, flower bouquet, elegant lighting" },
+  { label: "summer dress", prompt: "floral summer dress, picnic vibes, elegant lighting" },
+  { label: "early 2000s", prompt: "lace cami tops, straight blue jeans, barbie pink, elegant lighting" },
+  { label: "y2k style", prompt: "low rise pants, halter neck,grunge style,funky glasses" },
+  { label: "2000s", prompt: "metallic dress, hoop earings, pencil heels" },
+  { label: "marilyn monroe", prompt: "red carpet gown, hollywood glamour, elegant lighting" },
+  { label: "Sabrina Carpenter", prompt: "pop star, body suit, vibrant colors, glittery clothes, make the body proportional, hair should be blonde" },
 ];
+
 
 function App() {
   const [mode, setMode] = useState('normal'); 
